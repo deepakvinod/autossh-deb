@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # A "common-courtesy" file inspired by @gurneyalex
 #  - Information on current version.

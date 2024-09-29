@@ -1,3 +1,4 @@
 config/
 manifest-tool*
 qemu-*-static
+.env

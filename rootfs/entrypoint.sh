@@ -1,8 +1,8 @@
-#!/usr/bin/dumb-init /bin/sh
+#!/bin/bash
 source version.sh
 
 # Set up key file
-KEY_FILE=${SSH_KEY_FILE:=/id_rsa}
+KEY_FILE=${SSH_KEY_FILE:=${HOME}/.ssh/ssh_key}
 if [ ! -f "${KEY_FILE}" ]; then
     echo "[FATAL] No SSH Key file found"
     exit 1
@@ -13,7 +13,7 @@ cat "${SSH_KEY_FILE}" | ssh-add -k -
 # If known_hosts is provided, STRICT_HOST_KEY_CHECKING=yes
 # Default CheckHostIP=yes unless SSH_STRICT_HOST_IP_CHECK=false
 STRICT_HOSTS_KEY_CHECKING=no
-KNOWN_HOSTS=${SSH_KNOWN_HOSTS_FILE:=/known_hosts}
+KNOWN_HOSTS=${SSH_KNOWN_HOSTS_FILE:=${HOME}/.ssh/known_hosts}
 if [ -f "${KNOWN_HOSTS}" ]; then
     KNOWN_HOSTS_ARG="-o UserKnownHostsFile=${KNOWN_HOSTS} "
     if [ "${SSH_STRICT_HOST_IP_CHECK}" = false ]; then
@@ -25,11 +25,11 @@ if [ -f "${KNOWN_HOSTS}" ]; then
 fi
 
 # Add entry to /etc/passwd if we are running non-root
-if [[ $(id -u) != "0" ]]; then
-  USER="autossh:x:$(id -u):$(id -g):autossh:/tmp:/bin/sh"
-  echo "[INFO ] Creating non-root-user = $USER"
-  echo "$USER" >> /etc/passwd
-fi
+#if [[ $(id -u) != "0" ]]; then
+#  USER="autossh:x:$(id -u):$(id -g):autossh:/tmp:/bin/sh"
+#  echo "[INFO ] Creating non-root-user = $USER"
+#  echo "$USER" >> /etc/passwd
+#fi
 
 if [ ! -z "${SSH_BIND_IP}" ] && [ "${SSH_MODE}" = "-R" ]; then
     echo "[WARN ] SSH_BIND_IP requires GatewayPorts configured on the server to work properly"

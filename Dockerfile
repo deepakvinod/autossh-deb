@@ -1,11 +1,15 @@
-FROM alpine:latest
+FROM debian:stable-slim
 
-ARG APPLICATION="myapp"
-ARG BUILD_RFC3339="1970-01-01T00:00:00Z"
-ARG REVISION="local"
-ARG DESCRIPTION="no description"
-ARG PACKAGE="user/repo"
-ARG VERSION="dirty"
+ARG APPLICATION="autossh-deb"
+ARG BUILD_RFC3339="2024-09-28T22:34:03+00:00Z"
+ARG DESCRIPTION="autossh tunnel on debian"
+ARG PACKAGE="deepak/autossh-deb"
+
+ENV \
+  APPLICATION="${APPLICATION}" \
+  BUILD_RFC3339="${BUILD_RFC3339}" \
+  DESCRIPTION="${DESCRIPTION}" \
+  PACKAGE="${PACKAGE}"
 
 LABEL org.opencontainers.image.ref.name="${PACKAGE}" \
   org.opencontainers.image.created=$BUILD_RFC3339 \
@@ -18,11 +22,24 @@ LABEL org.opencontainers.image.ref.name="${PACKAGE}" \
   org.opencontainers.image.version=$VERSION \
   org.opencontainers.image.url="https://hub.docker.com/r/${PACKAGE}/"
 
-RUN \
-  apk --no-cache add \
+ARG REVISION="r1"
+ARG VERSION="2.0.0"
+
+ENV \
+  REVISION="${REVISION}" \
+  VERSION="${VERSION}"
+
+LABEL org.opencontainers.image.revision=$REVISION \
+  org.opencontainers.image.version=$VERSION
+
+RUN apt-get update && apt-get install -y \
     autossh \
-    dumb-init && \
-  chmod g+w /etc/passwd
+    && rm -rf /var/lib/apt/lists/*
+
+RUN useradd --create-home --home-dir /home/user --shell /bin/bash user
+USER user
+WORKDIR /home/user
+RUN mkdir .ssh && chmod 700 .ssh
 
 ENV \
   AUTOSSH_PIDFILE=/tmp/autossh.pid \
@@ -32,15 +49,7 @@ ENV \
   AUTOSSH_LOGLEVEL=0 \
   AUTOSSH_LOGFILE=/dev/stdout
 
-ENV \
-  APPLICATION="${APPLICATION}" \
-  BUILD_RFC3339="${BUILD_RFC3339}" \
-  REVISION="${REVISION}" \
-  DESCRIPTION="${DESCRIPTION}" \
-  PACKAGE="${PACKAGE}" \
-  VERSION="${VERSION}"
+COPY --chown=user:user ./rootfs/version.sh ./version.sh
+COPY --chown=user:user ./rootfs/entrypoint.sh ./entrypoint.sh
 
-COPY ./rootfs/entrypoint.sh /entrypoint.sh
-COPY ./rootfs/version.sh /version.sh
-
-ENTRYPOINT [ "/entrypoint.sh" ]
+ENTRYPOINT ["/bin/bash", "entrypoint.sh"]
