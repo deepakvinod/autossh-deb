@@ -33,7 +33,7 @@ LABEL org.opencontainers.image.revision=$REVISION \
   org.opencontainers.image.version=$VERSION
 
 RUN apt-get update && apt-get install -y \
-    autossh \
+    autossh dumb-init \
     && rm -rf /var/lib/apt/lists/*
 
 RUN useradd --create-home --home-dir /home/user --shell /bin/bash user
@@ -52,4 +52,5 @@ ENV \
 COPY --chown=user:user ./rootfs/version.sh ./version.sh
 COPY --chown=user:user ./rootfs/entrypoint.sh ./entrypoint.sh
 
-ENTRYPOINT ["/bin/bash", "entrypoint.sh"]
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+CMD ["entrypoint.sh"]
